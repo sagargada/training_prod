@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beansProjectDescription>
+	<version>1</version>
+	<pluginVersion><![CDATA[2.7.1.201107082359-RELEASE]]></pluginVersion>
+	<configSuffixes>
+		<configSuffix><![CDATA[xml]]></configSuffix>
+	</configSuffixes>
+	<enableImports><![CDATA[true]]></enableImports>
+	<configs>
+		<config>src/main/resources/server-bootstrap-config.xml</config>
+		<config>src/main/resources/servlet-config.xml</config>
+		<config>src/main/resources/config/redis-false-config.xml</config>
+		<config>src/main/resources/config/redis-true-config.xml</config>
+		<config>src/main/resources/config/servlet/redis-true-config.xml</config>
+		<config>src/main/resources/config/servlet/redis-false-config.xml</config>
+	</configs>
+	<configSets>
+	</configSets>
+</beansProjectDescription>

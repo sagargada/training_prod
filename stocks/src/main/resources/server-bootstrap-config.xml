@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xsi:schemaLocation="http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd
+		http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit-1.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+	<context:property-placeholder system-properties-mode="OVERRIDE"/>
+
+	<bean id="refreshScope" class="org.springframework.amqp.rabbit.stocks.context.RefreshScope"/>
+
+	<bean id="scheduler" class="org.springframework.scheduling.config.ScheduledTaskRegistrar">
+		<property name="triggerTasks">
+			<map>
+				<entry>
+					<key>
+						<bean class="org.springframework.scheduling.support.MethodInvokingRunnable">
+							<property name="targetObject" ref="marketDataGateway" />
+							<property name="targetMethod" value="sendMarketData" />
+						</bean>
+					</key>
+					<bean id="trigger" class="org.springframework.scheduling.support.CronTrigger" scope="refresh">
+						<constructor-arg value="#{environmentProperties['quote.trigger']?:'0/5 * * * * *'}"/>
+					</bean>
+				</entry>
+			</map>
+		</property>
+	</bean>
+
+	<bean id="environmentProperties" class="org.springframework.beans.factory.config.PropertiesFactoryBean"/>
+
+	<!--  pick up rabbit broker configuration -->
+	<context:component-scan base-package="org.springframework.amqp.rabbit.stocks.config.server"/>
+	
+	<bean id="executionVenueService"
+		class="org.springframework.amqp.rabbit.stocks.service.stubs.ExecutionVenueServiceStub">
+	</bean>
+
+	<bean id="creditCheckService"
+		class="org.springframework.amqp.rabbit.stocks.service.stubs.CreditCheckServiceStub">
+	</bean>
+	
+	<bean id="tradingService"
+		class="org.springframework.amqp.rabbit.stocks.service.stubs.TradingServiceStub">
+	</bean>
+
+	<bean name="serverHandler" class="org.springframework.amqp.rabbit.stocks.handler.ServerHandler">
+		<constructor-arg ref="executionVenueService"/>
+		<constructor-arg ref="creditCheckService"/>
+		<constructor-arg ref="tradingService"/>
+	</bean>
+
+	<bean id="marketDataGateway" class="org.springframework.amqp.rabbit.stocks.gateway.RabbitMarketDataGateway">
+		<property name="rabbitTemplate" ref="rabbitTemplate" />
+	</bean>
+
+	<listener-container concurrency="5" connection-factory="connectionFactory" message-converter="jsonMessageConverter"
+		xmlns="http://www.springframework.org/schema/rabbit">
+		<listener ref="serverHandler" method="handleMessage" queue-names="#{stockRequestQueue.name}" />
+	</listener-container>
+
+	<import resource="classpath:/config/redis-${REDIS:false}-config.xml"/>
+	<import resource="classpath:/config/${PROFILE:default}/server-config.xml" />
+
+</beans>
