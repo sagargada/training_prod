@@ -1,0 +1,18 @@
+--- 
+applications: 
+  target/customer-survey-1.0.0-BUILD-SNAPSHOT/: 
+    name: customer-survey
+    url: ${name}.${target-base}
+    framework: 
+      name: java_web
+      info: 
+        mem: 512M
+        description: Java Web Application
+        exec: 
+    mem: 512M
+    instances: 1
+    services: 
+      mongodb-67f01: 
+        type: mongodb
+      mysql-7bfaa: 
+        type: mysql
